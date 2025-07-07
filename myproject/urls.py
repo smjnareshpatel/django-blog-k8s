@@ -26,7 +26,7 @@ def health_check(request):
     return JsonResponse({"status": "ok"})
 
 def root_view(request):
-    return HttpResponse("Django App is running")  # ✅ This now works
+    return HttpResponse("CI/CD working! New version deployed.")  # ✅ This now works
 
 urlpatterns = [
     path('', root_view),
