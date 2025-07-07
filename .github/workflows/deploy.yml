@@ -1,15 +1,14 @@
-name: CI/CD Django App
+name: CI Django App
 
 on:
   push:
-    branches: [main]  # or your deploy branch
+    branches: [main]  # Or your branch
 
 env:
   IMAGE_NAME: rdxnareshpatel/django-app
-  TAG: ${{ github.sha }}
 
 jobs:
-  deploy:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
@@ -25,22 +24,11 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Build and push Docker image
+    - name: Build and push Docker image with short SHA tag
       run: |
-        docker build -t $IMAGE_NAME:$TAG .
-        docker push $IMAGE_NAME:$TAG
+        SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+        docker build -t $IMAGE_NAME:$SHORT_SHA .
+        docker push $IMAGE_NAME:$SHORT_SHA
 
-    - name: Set up kubectl
-      uses: azure/setup-kubectl@v3
-      with:
-        version: 'latest'
-
-    - name: Set up Kubeconfig
-      run: |
-        echo "${{ secrets.KUBECONFIG }}" > kubeconfig
-        export KUBECONFIG=$PWD/kubeconfig
-        kubectl get nodes
-
-    - name: Deploy to Kubernetes
-      run: |
-        kubectl set image deployment/django-app django=$IMAGE_NAME:$TAG --record
+    - name: Display Image Tag
+      run: echo "Image pushed: $IMAGE_NAME:$(echo $GITHUB_SHA | cut -c1-7)"
