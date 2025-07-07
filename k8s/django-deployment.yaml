@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: django-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: django
+  template:
+    metadata:
+      labels:
+        app: django
+    spec:
+      containers:
+        - name: django
+          image: rdxnareshpatel/django-app:v30  # ✅ Use the latest stable image with working health check
+          ports:
+            - containerPort: 8000
+          env:
+            - name: POSTGRES_DB
+              value: mydb
+            - name: POSTGRES_USER
+              value: myuser
+            - name: POSTGRES_PASSWORD
+              value: mypassword
+            - name: DB_HOST
+              value: postgres
+            - name: DB_PORT
+              value: "5432"
+          volumeMounts:
+            - name: static-volume
+              mountPath: /code/staticfiles
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+          resources:                        # ✅ Increased to avoid Exit Code 137
+            requests:
+              memory: "1024Mi"              # Was: 512Mi
+              cpu: "500m"
+            limits:
+              memory: "2048Mi"              # Was: 1.5Gi
+              cpu: "1000m"
+
+        - name: nginx
+          image: rdxnareshpatel/django-nginx:v17
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: static-volume
+              mountPath: /code/staticfiles
+          readinessProbe:
+            httpGet:
+              path: /health/
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 1
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /health/
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 1
+            failureThreshold: 3
+
+      volumes:
+        - name: static-volume
+          emptyDir: {}  # Shared volume for static files

@@ -1,0 +1,6 @@
+djangovenv/
+__pycache__/
+*.pyc
+.env
+*.sqlite3
+*.log
