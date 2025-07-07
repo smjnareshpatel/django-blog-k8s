@@ -2,7 +2,7 @@ name: CI Django App
 
 on:
   push:
-    branches: [main]  # Or your branch
+    branches: [main]
 
 env:
   IMAGE_NAME: rdxnareshpatel/django-app
@@ -31,4 +31,6 @@ jobs:
         docker push $IMAGE_NAME:$SHORT_SHA
 
     - name: Display Image Tag
-      run: echo "Image pushed: $IMAGE_NAME:$(echo $GITHUB_SHA | cut -c1-7)"
+      run: |
+        SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+        echo "Image pushed: $IMAGE_NAME:$SHORT_SHA"
